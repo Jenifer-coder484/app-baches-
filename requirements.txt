@@ -1,3 +1,6 @@
-flask
-requests
-pandas
+fastapi
+uvicorn
+jinja2
+python-dotenv
+aiosmtplib
+ultralytics
