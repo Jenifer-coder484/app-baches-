@@ -2,35 +2,73 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Detector de Baches</title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
   <div class="container">
-    <h1>Sube una imagen para detectar baches</h1>
+    <h1>Detector de Baches</h1>
     <form id="uploadForm" enctype="multipart/form-data">
-      <input type="file" name="file" id="fileInput" required />
+      <input type="file" name="file" id="fileInput" accept="image/*" required />
       <button type="submit">Detectar</button>
     </form>
+
+    <div id="previewContainer">
+      <p><strong>Vista previa:</strong></p>
+      <img id="previewImage" src="#" alt="Imagen seleccionada" style="display: none;" />
+    </div>
+
     <div id="result"></div>
   </div>
+
   <script>
     const form = document.getElementById("uploadForm");
     const result = document.getElementById("result");
+    const previewImage = document.getElementById("previewImage");
+    const fileInput = document.getElementById("fileInput");
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          previewImage.src = e.target.result;
+          previewImage.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+      result.innerHTML = "⏳ Procesando...";
       const formData = new FormData(form);
-      const response = await fetch("/api/detect-bache", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await response.json();
-      result.innerHTML = `
-        <h3>Resultado:</h3>
-        <p><strong>Tipo de bache:</strong> ${data.tipo}</p>
-        <p><strong>Fecha y hora:</strong> ${data.fecha_hora}</p>
-        <p><strong>Ubicación:</strong> ${data.ubicacion}</p>
-      `;
+      try {
+        const response = await fetch("/api/detect-bache", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error del servidor: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.error) {
+          result.innerHTML = `<p class="error">❌ ${data.error}</p>`;
+        } else {
+          result.innerHTML = `
+            <h3>Resultado:</h3>
+            <p><strong>Tipo de bache:</strong> ${data.tipo}</p>
+            <p><strong>Fecha y hora:</strong> ${data.fecha_hora}</p>
+            <p><strong>Ubicación:</strong> ${data.ubicacion}</p>
+          `;
+        }
+      } catch (error) {
+        result.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+        console.error(error);
+      }
     });
   </script>
 </body>
