@@ -6,3 +6,4 @@ aiosmtplib
 ultralytics
 python-multipart
 torch
+gdown
