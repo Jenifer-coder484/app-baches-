@@ -1,9 +1,10 @@
 fastapi
 uvicorn
+aiofiles
 jinja2
-python-dotenv
+aiohttp
 aiosmtplib
-ultralytics
 python-multipart
-torch
+python-dotenv
+ultralytics
 gdown
