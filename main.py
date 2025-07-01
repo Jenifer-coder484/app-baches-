@@ -10,21 +10,36 @@ import aiosmtplib
 import shutil
 import os
 from email.message import EmailMessage
+import gdown  # <-- agregado
+
 # Cargar .env
 load_dotenv()
 EMAIL_USER = os.getenv("EMAIL_USER")
 EMAIL_PASS = os.getenv("EMAIL_PASS")
+
+# Descargar modelo best.pt si no existe
+model_path = "best.pt"
+if not os.path.exists(model_path):
+    url = "https://drive.google.com/uc?id=1OSgQoJyItUnGlRtuW1H2na1pHZrc6qFw"  # pon aquí tu ID
+    print("Descargando best.pt desde Google Drive...")
+    gdown.download(url, model_path, quiet=False)
+else:
+    print("best.pt ya existe, no se descarga.")
+
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# Cargar modelo
-model = YOLO("best.pt")
+
+# Cargar modelo con archivo descargado
+model = YOLO(model_path)
+
 # Función de envío de correo
 async def enviar_reporte_asincrono(asunto, cuerpo, adjunto_path=None):
     mensaje = EmailMessage()
@@ -48,10 +63,12 @@ async def enviar_reporte_asincrono(asunto, cuerpo, adjunto_path=None):
         username=EMAIL_USER,
         password=EMAIL_PASS
     )
+
 # Página principal
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
 # API para detección
 @app.post("/api/detect-bache")
 async def detect_bache(file: UploadFile = File(...)):
