@@ -4,3 +4,5 @@ jinja2
 python-dotenv
 aiosmtplib
 ultralytics
+python-multipart
+torch
